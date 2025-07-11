@@ -1,0 +1,154 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riot Games - Claim Your VALORANT Phageguard Bundle</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <style>
+        @font-face {
+            font-family: 'Mark Pro';
+            src: url('https://fonts.cdnfonts.com/css/mark-pro');
+        }
+        body {
+            background: url('https://images.contentstack.io/v3/assets/blt731acb42bb3d1659/blt8f7b7e0b7c8b8c8b/66e8c3b1c4b7f7e3a7c6e3f2/valorant-agents-bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #ffffff;
+            font-family: 'Mark Pro', 'Arial', sans-serif;
+            overflow-x: hidden;
+        }
+        .riot-logo {
+            width: 100px;
+        }
+        .bundle-section {
+            background: rgba(17, 24, 39, 0.9);
+            border-radius: 12px;
+            padding: 2.5rem;
+            max-width: 600px;
+            margin: 3rem auto;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+        .bundle-image {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 8px;
+            border: 2px solid #ff4655;
+            transition: transform 0.3s ease;
+        }
+        .bundle-image:hover {
+            transform: scale(1.05);
+        }
+        .timer {
+            font-size: 1.8rem;
+            color: #ff4655;
+            margin: 1.5rem 0;
+            font-weight: bold;
+        }
+        .login-btn {
+            background: #ff4655;
+            color: #ffffff;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .login-btn:hover {
+            background: #e53e3e;
+            transform: translateY(-2px);
+        }
+        .header-links a {
+            color: #ffffff;
+            margin: 0 1rem;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+        .header-links a:hover {
+            color: #ff4655;
+        }
+        .footer-links a {
+            color: #ffffff;
+            margin: 0 1rem;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+        .footer-links a:hover {
+            color: #ff4655;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center">
+    <header class="w-full py-4 bg-[#0a0d15]/90" data-aos="fade-down">
+        <div class="max-w-7xl mx-auto flex justify-between items-center px-4">
+            <img src="https://www.riotgames.com/darkstar/assets/images/brand/riotgames-logo.png" alt="Riot Games Logo" class="riot-logo">
+            <nav class="header-links">
+                <a href="#">Play Now</a>
+                <a href="#">Our Games</a>
+                <a href="#">Support</a>
+            </nav>
+        </div>
+    </header>
+    <main class="flex-1 flex flex-col items-center">
+        <div class="bundle-section text-center" data-aos="fade-up" data-aos-delay="100">
+            <h1 class="text-4xl font-bold mb-4">Claim Your Exclusive VALORANT Phageguard Bundle!</h1>
+            <p class="mb-6 text-lg">Unlock the futuristic Phageguard skin collection for free! Limited time offer.</p>
+            <img src="https://images.contentstack.io/v3/assets/blt731acb42bb3d1659/blt8f7b7e0b7c8b8c8b/66e8c3b1c4b7f7e3a7c6e3f2/valorant-phantom-bundle.jpg" alt="VALORANT Phageguard Bundle" class="bundle-image mx-auto mb-6" data-aos="zoom-in">
+            <div id="timer" class="timer"></div>
+            <a href="login.html" class="login-btn">Login with Riot Games</a>
+        </div>
+    </main>
+    <footer class="w-full py-4 bg-[#0a0d15]/90 text-center" data-aos="fade-up">
+        <div class="footer-links">
+            <a href="#">Privacy Notice</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Cookie Preferences</a>
+        </div>
+        <p class="text-sm text-gray-400 mt-2">© 2025 Riot Games, Inc. All rights reserved.</p>
+    </footer>
+    <script src="script.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: true });
+    </script>
+</body>
+</html>

